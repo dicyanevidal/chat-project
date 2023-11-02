@@ -10,15 +10,15 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class ChatResource {
 
-    @MessageMapping("/chat.sendMessage")
+    @MessageMapping("/chat/enviarMensagem")
     @SendTo("/topic/public")
     public Mensagem enviarMensagem(@Payload Mensagem mensagem) {
         return mensagem;
     }
 
-    @MessageMapping("/chat.addUser")
+    @MessageMapping("/chat/registrarUsuario")
     @SendTo("/topic/public")
-    public Mensagem incluirUsuario(@Payload Mensagem mensagem, SimpMessageHeaderAccessor headerAcessor) {
+    public Mensagem registrarUsuario(@Payload Mensagem mensagem, SimpMessageHeaderAccessor headerAcessor) {
         headerAcessor.getSessionAttributes().put("username", mensagem.getRemetente());
         return mensagem;
     }
