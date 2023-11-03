@@ -16,6 +16,7 @@ var colors = [
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
 ];
 
+
 function connect(event) {
     username = document.querySelector('#name').value.trim();
 
@@ -23,7 +24,7 @@ function connect(event) {
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
-        var socket = new SockJS('/chat');
+        var socket = new SockJS('http://192.168.0.12:8080/chat');
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, onConnected, onError);
@@ -37,9 +38,9 @@ function onConnected() {
     stompClient.subscribe('/topic/public', onMessageReceived);
 
     // Tell your username to the server
-    stompClient.send("/app/chat/registrarUsuario",
+    stompClient.send("/app/chat.registrarUsuario",
         {},
-        JSON.stringify({sender: username, type: 'JOIN'})
+        JSON.stringify({remetente: username, tipoMensagem: 'JOIN'})
     )
 
     connectingElement.classList.add('hidden');
@@ -55,12 +56,12 @@ function onError(error) {
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if(messageContent && stompClient) {
-        var chatMessage = {
-            sender: username,
-            content: messageInput.value,
-            type: 'CHAT'
+        var mensagem = {
+            remetente: username,
+            texto: messageInput.value,
+            tipoMensagem: 'CHAT'
         };
-        stompClient.send("/app/enviarMensagem", {}, JSON.stringify(chatMessage));
+        stompClient.send("/app/chat.enviarMensagem", {}, JSON.stringify(mensagem));
         messageInput.value = '';
     }
     event.preventDefault();
@@ -72,30 +73,30 @@ function onMessageReceived(payload) {
 
     var messageElement = document.createElement('li');
 
-    if(message.type === 'JOIN') {
+    if(message.tipoMensagem === 'JOIN') {
         messageElement.classList.add('event-message');
-        message.content = message.sender + ' joined!';
-    } else if (message.type === 'LEAVE') {
+        message.texto = message.remetente + ' entrou!';
+    } else if (message.tipoMensagem === 'LEAVE') {
         messageElement.classList.add('event-message');
-        message.content = message.sender + ' left!';
+        message.texto = message.remetente + ' saiu!';
     } else {
         messageElement.classList.add('chat-message');
 
         var avatarElement = document.createElement('i');
-        var avatarText = document.createTextNode(message.sender[0]);
+        var avatarText = document.createTextNode(message.remetente[0]);
         avatarElement.appendChild(avatarText);
-        avatarElement.style['background-color'] = getAvatarColor(message.sender);
+        avatarElement.style['background-color'] = getAvatarColor(message.remetente);
 
         messageElement.appendChild(avatarElement);
 
         var usernameElement = document.createElement('span');
-        var usernameText = document.createTextNode(message.sender);
+        var usernameText = document.createTextNode(message.remetente);
         usernameElement.appendChild(usernameText);
         messageElement.appendChild(usernameElement);
     }
 
     var textElement = document.createElement('p');
-    var messageText = document.createTextNode(message.content);
+    var messageText = document.createTextNode(message.texto);
     textElement.appendChild(messageText);
 
     messageElement.appendChild(textElement);
@@ -104,7 +105,6 @@ function onMessageReceived(payload) {
     messageArea.scrollTop = messageArea.scrollHeight;
 }
 
-
 function getAvatarColor(messageSender) {
     var hash = 0;
     for (var i = 0; i < messageSender.length; i++) {
@@ -112,6 +112,22 @@ function getAvatarColor(messageSender) {
     }
     var index = Math.abs(hash % colors.length);
     return colors[index];
+}
+
+function disconnect() {
+    if (stompClient !== null) {
+        stompClient.subscribe('/topic/public', onMessageReceived);
+
+        // Tell your username to the server
+        stompClient.send("/app/chat.registrarUsuario",
+            {},
+            JSON.stringify({remetente: username, tipoMensagem: 'LEAVE'})
+        )
+        stompClient.disconnect();
+        connectingElement.classList.remove('hidden');
+        usernamePage.classList.remove('hidden'); // Mostrar a página de nome de usuário novamente
+        chatPage.classList.add('hidden'); // Esconder a página de chat
+    }
 }
 
 usernameForm.addEventListener('submit', connect, true)
