@@ -24,7 +24,7 @@ function connect(event) {
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
-        var socket = new SockJS('/chat');
+        var socket = new SockJS('http://192.168.0.12:8080/chat');
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, onConnected, onError);
@@ -105,15 +105,6 @@ function onMessageReceived(payload) {
     messageArea.scrollTop = messageArea.scrollHeight;
 }
 
-function disconnect() {
-    if (stompClient !== null) {
-        stompClient.disconnect();
-        connectingElement.classList.remove('hidden');
-        connectButton.style.display = 'inline';
-        disconnectButton.style.display = 'none';
-    }
-}
-
 function getAvatarColor(messageSender) {
     var hash = 0;
     for (var i = 0; i < messageSender.length; i++) {
@@ -125,6 +116,13 @@ function getAvatarColor(messageSender) {
 
 function disconnect() {
     if (stompClient !== null) {
+        stompClient.subscribe('/topic/public', onMessageReceived);
+
+        // Tell your username to the server
+        stompClient.send("/app/chat.registrarUsuario",
+            {},
+            JSON.stringify({remetente: username, tipoMensagem: 'LEAVE'})
+        )
         stompClient.disconnect();
         connectingElement.classList.remove('hidden');
         usernamePage.classList.remove('hidden'); // Mostrar a página de nome de usuário novamente
