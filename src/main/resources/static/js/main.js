@@ -16,6 +16,7 @@ var colors = [
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
 ];
 
+
 function connect(event) {
     username = document.querySelector('#name').value.trim();
 
@@ -104,6 +105,14 @@ function onMessageReceived(payload) {
     messageArea.scrollTop = messageArea.scrollHeight;
 }
 
+function disconnect() {
+    if (stompClient !== null) {
+        stompClient.disconnect();
+        connectingElement.classList.remove('hidden');
+        connectButton.style.display = 'inline';
+        disconnectButton.style.display = 'none';
+    }
+}
 
 function getAvatarColor(messageSender) {
     var hash = 0;
@@ -112,6 +121,15 @@ function getAvatarColor(messageSender) {
     }
     var index = Math.abs(hash % colors.length);
     return colors[index];
+}
+
+function disconnect() {
+    if (stompClient !== null) {
+        stompClient.disconnect();
+        connectingElement.classList.remove('hidden');
+        usernamePage.classList.remove('hidden'); // Mostrar a página de nome de usuário novamente
+        chatPage.classList.add('hidden'); // Esconder a página de chat
+    }
 }
 
 usernameForm.addEventListener('submit', connect, true)

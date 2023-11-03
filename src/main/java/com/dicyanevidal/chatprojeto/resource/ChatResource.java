@@ -16,8 +16,8 @@ public class ChatResource {
     @MessageMapping("/chat.enviarMensagem")
     @SendTo("/topic/public")
     public Mensagem enviarMensagem(@Payload Mensagem mensagem) {
-        final String horario = new SimpleDateFormat("HH:mm").format(new Date());
-        mensagem.setTexto(horario.concat(" ").concat(mensagem.getTexto()));
+        final String horario = new SimpleDateFormat("dd/MM/YY HH:mm").format(new Date());
+        mensagem.setTexto(horario.concat(" - ").concat(mensagem.getTexto()));
         return mensagem;
     }
 
